@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="300">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    Smart Garden | Remote
+  </title>
+
+</head>
+<style>
+  #chartOne {
+    display: none;
+  }
+
+  #loadingOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+
+  .loader {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #467816;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  #toast {
+    display: none;
+    position: fixed;
+    left: 87%;
+    margin: 10px;
+    top: 10%;
+    transform: translateX(-50%);
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 8px;
+    width: 60%;
+    max-width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  @media (max-width: 768px) {
+    #toast {
+      width: 80%;
+      left: 55%;
+      top: 10%;
+    }
+  }
+</style>
+
+<body
+  x-data="{ page: 'ecommerce', 'loaded': true, 'darkMode': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false, 'toastVisible': false }"
+  x-init="darkMode = JSON.parse(localStorage.getItem('darkMode'));
+         $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
+  :class="{'dark text-bodydark bg-boxdark-2': darkMode === true}">
+  <include src="./partials/preloader.html"></include>
+
+  <div id="toast" x-show="toastVisible" class="toast">
+    Status Diperbaharui
+  </div>
+
+  <div id="loadingOverlay" x-show="loaded" class="loading-overlay">
+    <div class="loader"></div>
+  </div>
+
+  <div class="flex h-screen overflow-hidden">
+    <include src="./partials/sidebar.html"></include>
+    <div class="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+      <include src="./partials/header.html" />
+
+      <main>
+        <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 overflow-y-hidden" id="statusElement">
+          <div class="card mb-10">
+            <a class="card1" href="#">
+              <p id="statusText"></p>
+              <p class="small">Status Alat</p>
+              <div class="go-corner" href="#">
+                <div class="go-arrow">
+
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="flex justify-center items-center md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+            <div class="e-card playing bg-hijauMuda mx-auto dark:bg-boxdark w-full">
+              <div class="image"></div>
+              <div class="wave"></div>
+              <div class="infotop">
+                <h1 id="waterLevelBoolean" class="text-black dark:text-white"></h1>
+                <h3 class="mt-10 text-[20px] text-black dark:text-white">Suplai Tangki Air</h3>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10">
+            <button class="pushable buttonON w-full dark:bg-boxdark" onclick="updateLED(1)">
+              <span class="shadow"></span>
+              <span class="edge"></span>
+              <span class="front">
+                Mode Manual
+              </span>
+            </button>
+
+            <button class="pushable buttonOFF w-full" onclick="updateLED(0)">
+              <span class="shadow"></span>
+              <span class="edge"></span>
+              <span class="front">
+                Mode Otomatis
+              </span>
+            </button>
+
+            <button class="pushable buttonOFF w-full" onclick="updateMode(1)">
+              <span class="shadow"></span>
+              <span class="edge"></span>
+              <span class="front">
+                Perbarui Data
+              </span>
+            </button>
+
+            <button class="pushable buttonOFF w-full" onclick="updateMode(2)">
+              <span class="shadow"></span>
+              <span class="edge"></span>
+              <span class="front">
+                Siram Tanaman
+              </span>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <div id="chartOne"></div>
+  </div>
+  <script>
+    function fetchData() {
+      fetch('/api/getWaterLevel.php')
+        .then(response => response.json())
+        .then(data => {
+          console.log(data);
+          const waterLevelValue = data.waterLevel;
+          const waterLevelPercentageElement = document.getElementById('waterLevelBoolean');
+
+          const maximumValue = 31 * 2;
+          const percentage = ((maximumValue - waterLevelValue) / maximumValue) * 100;
+
+          waterLevelPercentageElement.textContent = Math.round(percentage) + '%';
+
+          document.documentElement.style.setProperty('--water-level', percentage + '%');
+
+          const waveElement = document.querySelector('.wave');
+          const invertedPercentage = 100 - Math.round(percentage);
+          waveElement.style.clipPath = `polygon(0 ${invertedPercentage}%, 100% ${invertedPercentage}%, 100% 100%, 0 100%)`;
+        })
+        .catch(error => console.error('Error fetching water level data:', error));
+    }
+
+    fetchData();
+    setInterval(fetchData, 1000);
+  </script>
+
+
+  <script>
+    async function updateLED(statValue) {
+      try {
+        const response = await fetch('/api/postUpdateDBLED.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `Stat=${statValue}`,
+        });
+
+        const responseData = await response.json();
+
+        if (responseData.success) {
+          document.getElementById('toast').style.display = 'block';
+
+          setTimeout(() => {
+            document.getElementById('toast').style.display = 'none';
+          }, 2000);
+
+          const updateDataButton = document.querySelector('.buttonOFF:nth-child(3)');
+          const siramTanamanButton = document.querySelector('.buttonOFF:nth-child(4)');
+
+          if (statValue === 0) {
+            updateDataButton.disabled = true;
+            siramTanamanButton.disabled = true;
+            updateDataButton.classList.add('disabled-button');
+            siramTanamanButton.classList.add('disabled-button');
+          } else {
+            updateDataButton.disabled = statValue !== 1;
+            siramTanamanButton.disabled = statValue !== 1;
+            updateDataButton.classList.remove('disabled-button');
+            siramTanamanButton.classList.remove('disabled-button');
+          }
+        } else {
+          alert('Gagal memperbarui status. Error: ' + responseData.message);
+        }
+
+      } catch (error) {
+        console.error('Terjadi kesalahan:', error);
+        alert('Terjadi kesalahan saat mengirim permintaan.');
+      }
+    }
+
+
+  </script>
+  <script>
+    async function updateMode(statValue) {
+      try {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+
+        const response = await fetch('/api/postUpdateMode.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `Stat2=${statValue}`,
+        });
+
+        const responseData = await response.json();
+
+        if (responseData.success) {
+          document.getElementById('toast').style.display = 'block';
+
+          setTimeout(() => {
+            document.getElementById('toast').style.display = 'none';
+          }, 3000);
+        } else {
+          alert('Gagal memperbarui status. Error: ' + responseData.message);
+        }
+
+      } catch (error) {
+        console.error('Terjadi kesalahan:', error);
+        alert('Terjadi kesalahan saat mengirim permintaan.');
+      } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
+      }
+    }
+  </script>
+  <script>
+    const updateStatus = () => {
+  fetch('/api/getStat.php')
+    .then(response => response.text())
+    .then(status => {
+      const statusTextElement = document.getElementById('statusText');
+      const statusElement = document.getElementById('statusElement');
+
+      if (status.trim() === '0') {
+        statusTextElement.textContent = 'Mode Otomatis';
+        disableButtons(true);
+      } else if (status.trim() === '1') {
+        statusTextElement.textContent = 'Mode Manual';
+        disableButtons(false);
+      } else {
+        throw new Error('Data Tidak Sesuai');
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching or processing status data:', error);
+      const statusTextElement = document.getElementById('statusText');
+      const statusElement = document.getElementById('statusElement');
+      statusTextElement.textContent = 'Gagal';
+      disableButtons(false);
+    });
+};
+
+const disableButtons = (disable) => {
+  const updateDataButton = document.querySelector('.buttonOFF:nth-child(3)');
+  const siramTanamanButton = document.querySelector('.buttonOFF:nth-child(4)');
+
+  updateDataButton.disabled = disable;
+  siramTanamanButton.disabled = disable;
+
+  if (disable) {
+    updateDataButton.classList.add('disabled-button');
+    siramTanamanButton.classList.add('disabled-button');
+  } else {
+    updateDataButton.classList.remove('disabled-button');
+    siramTanamanButton.classList.remove('disabled-button');
+  }
+};
+
+setInterval(updateStatus, 1000);
+
+
+    setInterval(updateStatus, 1000);
+
+
+    setInterval(updateStatus, 1000);
+  </script>
+</body>
+
+</html>
