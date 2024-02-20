@@ -44,7 +44,7 @@
                   <h4 id="waterLevelBoolean" class="text-title-md font-bold text-black dark:text-white">
                     Loading...
                   </h4>
-                  <span class="text-sm font-medium">Jarak Tinggi Air</span>
+                  <span class="text-sm font-medium">Suplai Tangki Air</span>
                 </div>
               </div>
             </div>
@@ -65,7 +65,7 @@
               class="rounded-lg  bg-white px-7.5 hover:bg-hijauMuda transition duration-200  shadow-default dark:border-strokedark dark:bg-boxdark">
               <div class="mt-8 mb-8 flex items-end justify-between">
                 <div>
-                  <h4 class="text-title-md font-bold text-black dark:text-white" id="currentDateTime">
+                  <h4 class="text-title-md font-bold text-black dark:text-white mr-5" id="currentDateTime">
                   </h4>
                   <span class="text-sm font-medium">Jam</span>
                 </div>
@@ -97,12 +97,14 @@
         .then(response => response.json())
         .then(data => {
           const humidityPercentageElement = document.getElementById('humidityPercentage');
-          const humidityValue = parseInt(data.humidity, 10);
-
-          if (humidityValue < 10) {
+          const humidityValue = parseFloat(data.humidity);
+  
+          if (humidityValue <= 0) {
             humidityPercentageElement.textContent = 'Basah';
-          } else {
+          } else if (humidityValue >= 1) {
             humidityPercentageElement.textContent = 'Kering';
+          } else {
+            humidityPercentageElement.textContent = 'Normal';
           }
         })
         .catch(error => {
@@ -113,6 +115,7 @@
     };
     setInterval(updateHumidityData, 1000);
   </script>
+  
 
   <script>
     function fetchData() {
@@ -123,11 +126,12 @@
           const waterLevelValue = data.waterLevel;
           const waterLevelPercentageElement = document.getElementById('waterLevelBoolean');
 
-          const maximumValue = 31 * 2;
-          const percentage = ((maximumValue - waterLevelValue) / maximumValue) * 100;
+          const maximumValue = 31;
+          const basePercentage = 100;
+
+          const percentage = basePercentage * (1 - waterLevelValue / maximumValue);
 
           waterLevelPercentageElement.textContent = Math.round(percentage) + '%';
-
 
           const waveElement = document.querySelector('.wave');
           const invertedPercentage = 100 - Math.round(percentage);
@@ -165,7 +169,6 @@
     setInterval(updateStatus, 1000);
 
 
-    setInterval(updateStatus, 1000);
   </script>
 
 

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="300">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    Smart Garden | Remote
+  </title>
+
+<link rel="icon" href="icon.png"><link href="style.css" rel="stylesheet"></head>
+<style>
+  #chartOne {
+    display: none;
+  }
+
+  #loadingOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+
+  .loader {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #467816;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  #toast {
+    display: none;
+    position: fixed;
+    left: 87%;
+    margin: 10px;
+    top: 10%;
+    transform: translateX(-50%);
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 8px;
+    width: 60%;
+    max-width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  @media (max-width: 768px) {
+    #toast {
+      width: 80%;
+      left: 55%;
+      top: 10%;
+    }
+  }
+</style>
+
+<body
+  x-data="{ page: 'ecommerce', 'loaded': true, 'darkMode': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false, 'toastVisible': false }"
+  x-init="darkMode = JSON.parse(localStorage.getItem('darkMode'));
+         $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
+  :class="{'dark text-bodydark bg-boxdark-2': darkMode === true}">
+  <div
+  x-show="loaded"
+  x-init="window.addEventListener('DOMContentLoaded', () => {setTimeout(() => loaded = false, 500)})"
+  class="fixed left-0 top-0 z-999999 flex h-screen w-screen items-center justify-center bg-white dark:bg-boxdark"
+>
+  <div
+    class="h-16 w-16 animate-spin rounded-full border-4 border-solid border-hijauTua border-t-transparent"
+  ></div>
+</div>
+
+  <div id="toast" x-show="toastVisible" class="toast">
+    Status Diperbaharui
+  </div>
+
+  <div id="loadingOverlay" x-show="loaded" class="loading-overlay">
+    <div class="loader"></div>
+  </div>
+
+  <div class="flex h-screen overflow-hidden">
+    <aside :class="sidebarToggle ? 'translate-x-0' : '-translate-x-full'"
+  class="absolute left-0 top-0 z-20 flex h-screen w-60 flex-col overflow-y-hidden bg-hijauMuda duration-300 ease-linear shadow-md dark:bg-[#3f3f3f] lg:static lg:translate-x-0"
+  @click.outside="sidebarToggle = false">
+  <div>
+    <button class="block lg:hidden ml-48" @click.stop="sidebarToggle = !sidebarToggle">
+      <img src="src/images/icon/left.png" width="30" class="items-end mt-10" height="30" alt="">
+    </button>
+  </div>
+  <div class="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+    <a href="index.html">
+      <img src="src/images/logo/logo.png" alt="Logo" />
+    </a>
+  </div>
+
+
+  <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear rounded">
+    <nav class=" px-4 py-4 lg:px-6" x-data="{selected: $persist('Dashboard')}">
+      <div>
+        <ul class="mb-6 flex flex-col gap-1.5">
+          <li>
+            <a class="group relative flex items-center mt-10 text-white bg-hijau gap-2.5 rounded-lg px-4 py-2 font-medium duration-300 ease-in-out hover:bg-hijauTuaHover dark:bg-boxdark dark:hover:bg-zinc-600"
+              href="index.html" @click="selected = (selected === 'Dashboard' ? '' : 'Dashboard')"
+              :class="{ 'bg-hijauTua dark:bg-boxdark-2': (selected === 'Dashboard') }">
+
+              <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M6.10322 0.956299H2.53135C1.5751 0.956299 0.787598 1.7438 0.787598 2.70005V6.27192C0.787598 7.22817 1.5751 8.01567 2.53135 8.01567H6.10322C7.05947 8.01567 7.84697 7.22817 7.84697 6.27192V2.72817C7.8751 1.7438 7.0876 0.956299 6.10322 0.956299ZM6.60947 6.30005C6.60947 6.5813 6.38447 6.8063 6.10322 6.8063H2.53135C2.2501 6.8063 2.0251 6.5813 2.0251 6.30005V2.72817C2.0251 2.44692 2.2501 2.22192 2.53135 2.22192H6.10322C6.38447 2.22192 6.60947 2.44692 6.60947 2.72817V6.30005Z"
+                  fill="" />
+                <path
+                  d="M15.4689 0.956299H11.8971C10.9408 0.956299 10.1533 1.7438 10.1533 2.70005V6.27192C10.1533 7.22817 10.9408 8.01567 11.8971 8.01567H15.4689C16.4252 8.01567 17.2127 7.22817 17.2127 6.27192V2.72817C17.2127 1.7438 16.4252 0.956299 15.4689 0.956299ZM15.9752 6.30005C15.9752 6.5813 15.7502 6.8063 15.4689 6.8063H11.8971C11.6158 6.8063 11.3908 6.5813 11.3908 6.30005V2.72817C11.3908 2.44692 11.6158 2.22192 11.8971 2.22192H15.4689C15.7502 2.22192 15.9752 2.44692 15.9752 2.72817V6.30005Z"
+                  fill="" />
+                <path
+                  d="M6.10322 9.92822H2.53135C1.5751 9.92822 0.787598 10.7157 0.787598 11.672V15.2438C0.787598 16.2001 1.5751 16.9876 2.53135 16.9876H6.10322C7.05947 16.9876 7.84697 16.2001 7.84697 15.2438V11.7001C7.8751 10.7157 7.0876 9.92822 6.10322 9.92822ZM6.60947 15.272C6.60947 15.5532 6.38447 15.7782 6.10322 15.7782H2.53135C2.2501 15.7782 2.0251 15.5532 2.0251 15.272V11.7001C2.0251 11.4188 2.2501 11.1938 2.53135 11.1938H6.10322C6.38447 11.1938 6.60947 11.4188 6.60947 11.7001V15.272Z"
+                  fill="" />
+                <path
+                  d="M15.4689 9.92822H11.8971C10.9408 9.92822 10.1533 10.7157 10.1533 11.672V15.2438C10.1533 16.2001 10.9408 16.9876 11.8971 16.9876H15.4689C16.4252 16.9876 17.2127 16.2001 17.2127 15.2438V11.7001C17.2127 10.7157 16.4252 9.92822 15.4689 9.92822ZM15.9752 15.272C15.9752 15.5532 15.7502 15.7782 15.4689 15.7782H11.8971C11.6158 15.7782 11.3908 15.5532 11.3908 15.272V11.7001C11.3908 11.4188 11.6158 11.1938 11.8971 11.1938H15.4689C15.7502 11.1938 15.9752 11.4188 15.9752 11.7001V15.272Z"
+                  fill="" />
+              </svg>
+              Dasbor
+            </a>
+
+          </li>
+
+          <li>
+            <a class="group relative flex items-center text-white bg-hijau gap-2.5 rounded-lg px-4 py-2 font-medium duration-300 ease-in-out hover:bg-hijauTuaHover dark:bg-boxdark dark:hover:bg-zinc-600"
+              href="system.html" @click="selected = (selected === 'System' ? '' : 'System')"
+              :class="{ 'bg-hijauTua dark:bg-boxdark-2': (selected === 'System') }">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
+              </svg>
+              
+              Sistem
+            </a>
+
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+</aside>
+    <div class="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+      <header class="sticky top-0 z-20 flex w-full bg-hijauMuda2 drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
+  <div class="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+    <div class="flex items-center gap-2 sm:gap-4 lg:hidden">
+      <button class="z-9 block rounded-sm p-1.5 lg:hidden " @click.stop="sidebarToggle = !sidebarToggle">
+        <img src="src/images/icon/menu_navbar.png" width="30" height="30" alt="">
+      </button>
+    </div>
+    <div class="hidden sm:block">
+
+    </div>
+
+    <div class="flex items-center gap-3 2xsm:gap-7">
+      <ul class="flex items-center gap-2 2xsm:gap-4">
+        <li>
+          <label :class="darkMode ? 'bg-hijauTua' : 'bg-stroke'"
+            class="relative m-0 block h-7.5 w-14 rounded-full shadow-md">
+            <input type="checkbox" :value="darkMode" @change="darkMode = !darkMode"
+              class="absolute top-0 z-50 m-0 h-full w-full cursor-pointer opacity-0" />
+            <span :class="darkMode && '!right-1 !translate-x-full'"
+              class="absolute left-1 top-1/2 flex h-6 w-6 -translate-y-1/2 translate-x-0 items-center justify-center rounded-full  bg-white shadow-switcher duration-75 ease-linear">
+              <span class="dark:hidden">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M7.99992 12.6666C10.5772 12.6666 12.6666 10.5772 12.6666 7.99992C12.6666 5.42259 10.5772 3.33325 7.99992 3.33325C5.42259 3.33325 3.33325 5.42259 3.33325 7.99992C3.33325 10.5772 5.42259 12.6666 7.99992 12.6666Z"
+                    fill="#969AA1" />
+                  <path
+                    d="M8.00008 15.3067C7.63341 15.3067 7.33342 15.0334 7.33342 14.6667V14.6134C7.33342 14.2467 7.63341 13.9467 8.00008 13.9467C8.36675 13.9467 8.66675 14.2467 8.66675 14.6134C8.66675 14.9801 8.36675 15.3067 8.00008 15.3067ZM12.7601 13.4267C12.5867 13.4267 12.4201 13.3601 12.2867 13.2334L12.2001 13.1467C11.9401 12.8867 11.9401 12.4667 12.2001 12.2067C12.4601 11.9467 12.8801 11.9467 13.1401 12.2067L13.2267 12.2934C13.4867 12.5534 13.4867 12.9734 13.2267 13.2334C13.1001 13.3601 12.9334 13.4267 12.7601 13.4267ZM3.24008 13.4267C3.06675 13.4267 2.90008 13.3601 2.76675 13.2334C2.50675 12.9734 2.50675 12.5534 2.76675 12.2934L2.85342 12.2067C3.11342 11.9467 3.53341 11.9467 3.79341 12.2067C4.05341 12.4667 4.05341 12.8867 3.79341 13.1467L3.70675 13.2334C3.58008 13.3601 3.40675 13.4267 3.24008 13.4267ZM14.6667 8.66675H14.6134C14.2467 8.66675 13.9467 8.36675 13.9467 8.00008C13.9467 7.63341 14.2467 7.33342 14.6134 7.33342C14.9801 7.33342 15.3067 7.63341 15.3067 8.00008C15.3067 8.36675 15.0334 8.66675 14.6667 8.66675ZM1.38675 8.66675H1.33341C0.966748 8.66675 0.666748 8.36675 0.666748 8.00008C0.666748 7.63341 0.966748 7.33342 1.33341 7.33342C1.70008 7.33342 2.02675 7.63341 2.02675 8.00008C2.02675 8.36675 1.75341 8.66675 1.38675 8.66675ZM12.6734 3.99341C12.5001 3.99341 12.3334 3.92675 12.2001 3.80008C11.9401 3.54008 11.9401 3.12008 12.2001 2.86008L12.2867 2.77341C12.5467 2.51341 12.9667 2.51341 13.2267 2.77341C13.4867 3.03341 13.4867 3.45341 13.2267 3.71341L13.1401 3.80008C13.0134 3.92675 12.8467 3.99341 12.6734 3.99341ZM3.32675 3.99341C3.15341 3.99341 2.98675 3.92675 2.85342 3.80008L2.76675 3.70675C2.50675 3.44675 2.50675 3.02675 2.76675 2.76675C3.02675 2.50675 3.44675 2.50675 3.70675 2.76675L3.79341 2.85342C4.05341 3.11342 4.05341 3.53341 3.79341 3.79341C3.66675 3.92675 3.49341 3.99341 3.32675 3.99341ZM8.00008 2.02675C7.63341 2.02675 7.33342 1.75341 7.33342 1.38675V1.33341C7.33342 0.966748 7.63341 0.666748 8.00008 0.666748C8.36675 0.666748 8.66675 0.966748 8.66675 1.33341C8.66675 1.70008 8.36675 2.02675 8.00008 2.02675Z"
+                    fill="#969AA1" />
+                </svg>
+              </span>
+              <span class="hidden dark:inline-block">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M14.3533 10.62C14.2466 10.44 13.9466 10.16 13.1999 10.2933C12.7866 10.3667 12.3666 10.4 11.9466 10.38C10.3933 10.3133 8.98659 9.6 8.00659 8.5C7.13993 7.53333 6.60659 6.27333 6.59993 4.91333C6.59993 4.15333 6.74659 3.42 7.04659 2.72666C7.33993 2.05333 7.13326 1.7 6.98659 1.55333C6.83326 1.4 6.47326 1.18666 5.76659 1.48C3.03993 2.62666 1.35326 5.36 1.55326 8.28666C1.75326 11.04 3.68659 13.3933 6.24659 14.28C6.85993 14.4933 7.50659 14.62 8.17326 14.6467C8.27993 14.6533 8.38659 14.66 8.49326 14.66C10.7266 14.66 12.8199 13.6067 14.1399 11.8133C14.5866 11.1933 14.4666 10.8 14.3533 10.62Z"
+                    fill="#969AA1" />
+                </svg>
+              </span>
+            </span>
+          </label>
+        </li>
+
+        <li class="relative" x-data="{ dropdownOpen: false, notifying: true }" @click.outside="dropdownOpen = false">
+          <a class="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-hijauTua dark:border-strokedark dark:bg-boxdark-2 shadow-md dark:text-white"
+            href="#" @click.prevent="dropdownOpen = ! dropdownOpen; notifying = false">
+            <span :class="!notifying && 'hidden'" class="absolute -top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-meta-1">
+              <span
+                class="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-meta-1 opacity-75"></span>
+            </span>
+
+            <svg class="fill-current duration-300 ease-in-out" width="18" height="18" viewBox="0 0 18 18" fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M16.1999 14.9343L15.6374 14.0624C15.5249 13.8937 15.4687 13.7249 15.4687 13.528V7.67803C15.4687 6.01865 14.7655 4.47178 13.4718 3.31865C12.4312 2.39053 11.0812 1.7999 9.64678 1.6874V1.1249C9.64678 0.787402 9.36553 0.478027 8.9999 0.478027C8.6624 0.478027 8.35303 0.759277 8.35303 1.1249V1.65928C8.29678 1.65928 8.24053 1.65928 8.18428 1.6874C4.92178 2.05303 2.4749 4.66865 2.4749 7.79053V13.528C2.44678 13.8093 2.39053 13.9499 2.33428 14.0343L1.7999 14.9343C1.63115 15.2155 1.63115 15.553 1.7999 15.8343C1.96865 16.0874 2.2499 16.2562 2.55928 16.2562H8.38115V16.8749C8.38115 17.2124 8.6624 17.5218 9.02803 17.5218C9.36553 17.5218 9.6749 17.2405 9.6749 16.8749V16.2562H15.4687C15.778 16.2562 16.0593 16.0874 16.228 15.8343C16.3968 15.553 16.3968 15.2155 16.1999 14.9343ZM3.23428 14.9905L3.43115 14.653C3.5999 14.3718 3.68428 14.0343 3.74053 13.6405V7.79053C3.74053 5.31553 5.70928 3.23428 8.3249 2.95303C9.92803 2.78428 11.503 3.2624 12.6562 4.2749C13.6687 5.1749 14.2312 6.38428 14.2312 7.67803V13.528C14.2312 13.9499 14.3437 14.3437 14.5968 14.7374L14.7655 14.9905H3.23428Z"
+                fill="" />
+            </svg>
+          </a>
+
+          <div x-show="dropdownOpen"
+            class="absolute -right-27 mt-2.5 flex h-59 w-75 sm:right-0 xsm:right-0 flex-col rounded-sm z-10  border-stroke bg-white shadow-default dark:border-strokedark  sm:w-80">
+            <div class="px-4.5 py-3 dark:bg-boxdark-2">
+              <h5 class="text-sm font-medium text-bodydark2 dark:text-white ">Notifikasi</h5>
+            </div>
+
+            <ul class="flex h-auto flex-col overflow-y-auto" id="notificationsList">
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const notificationsListElement = document.getElementById('notificationsList');
+
+    function formatTanggal(tanggalString) {
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', timeZoneName: 'short' };
+      const tanggal = new Date(tanggalString);
+      return tanggal.toLocaleDateString('id-ID', options);
+    }
+
+    function renderNotification(notification) {
+      const formattedDate = formatTanggal(notification.created_at);
+      const modeText = notification.type === 'manual' ? 'Mode Manual' : 'Mode Otomatis';
+
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <a class="flex flex-col gap-2.5 border-t px-4.5 py-3 hover:bg-gray-2 dark:bg-boxdark dark:border-strokedark dark:hover:bg-boxdark-2 transition duration-300">
+          <p class="text-md font-bold">
+            <span class="text-black dark:text-white">${modeText}</span>
+          </p>
+          <p class="text-sm">
+            <span class="text-black dark:text-white">${formattedDate}</span>
+          </p>
+          <p class="text-xs"></p>
+        </a>
+      `;
+
+      notificationsListElement.prepend(li);
+    }
+
+    function fetchNotifications() {
+  fetch('/api/getAllNotification.php')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        const notifications = data.data.reverse().slice(0, 8);
+        const existingNotificationCount = notificationsListElement.childElementCount;
+
+        if (notifications.length > existingNotificationCount) {
+          const newNotifications = notifications.slice(existingNotificationCount).reverse();
+          newNotifications.forEach(notification => {
+            renderNotification(notification);
+          });
+        }
+      } else {
+        console.error('Error fetching notifications:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching notifications:', error);
+    });
+}
+
+
+    fetchNotifications();
+
+    setInterval(fetchNotifications, 300000);
+  });
+</script>
+
+
+
+      <main>
+        <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 overflow-y-hidden" id="statusElement">
+          <div class="card mb-10">
+            <a class="card1" href="#">
+              <p id="statusText"></p>
+              <p class="small">Status Alat</p>
+              <div class="go-corner" href="#">
+                <div class="go-arrow">
+
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="flex justify-center items-center md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+            <div class="e-card playing bg-hijauMuda mx-auto dark:bg-boxdark w-full">
+              <div class="image"></div>
+              <div class="wave"></div>
+              <div class="infotop">
+                <h1 id="waterLevelBoolean" class="text-black dark:text-white"></h1>
+                <h3 class="mt-10 text-[20px] text-black dark:text-white">Suplai Tangki Air</h3>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10">
+            <button class="pushable buttonON w-full dark:bg-boxdark" onclick="updateLED(1)">
+              <span class="shadow"></span>
+              <span class="edge"></span>
+              <span class="front">
+                Mode Manual
+              </span>
+            </button>
+
+            <button class="pushable buttonOFF w-full" onclick="updateLED(0)">
+              <span class="shadow"></span>
+              <span class="edge"></span>
+              <span class="front">
+                Mode Otomatis
+              </span>
+            </button>
+
+            <button class="pushable buttonOFF w-full" onclick="updateMode(1)">
+              <span class="shadow"></span>
+              <span class="edge"></span>
+              <span class="front">
+                Perbarui Data
+              </span>
+            </button>
+
+            <button class="pushable buttonOFF w-full" onclick="updateMode(2)">
+              <span class="shadow"></span>
+              <span class="edge"></span>
+              <span class="front">
+                Siram Tanaman
+              </span>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <div id="chartOne"></div>
+  </div>
+  <script>
+    function fetchData() {
+      fetch('/api/getWaterLevel.php')
+        .then(response => response.json())
+        .then(data => {
+          console.log(data);
+          const waterLevelValue = data.waterLevel;
+          const waterLevelPercentageElement = document.getElementById('waterLevelBoolean');
+
+          const maximumValue = 31 * 2;
+          const percentage = ((maximumValue - waterLevelValue) / maximumValue) * 100;
+
+          waterLevelPercentageElement.textContent = Math.round(percentage) + '%';
+
+          document.documentElement.style.setProperty('--water-level', percentage + '%');
+
+          const waveElement = document.querySelector('.wave');
+          const invertedPercentage = 100 - Math.round(percentage);
+          waveElement.style.clipPath = `polygon(0 ${invertedPercentage}%, 100% ${invertedPercentage}%, 100% 100%, 0 100%)`;
+        })
+        .catch(error => console.error('Error fetching water level data:', error));
+    }
+
+    fetchData();
+    setInterval(fetchData, 1000);
+  </script>
+
+
+  <script>
+    async function updateLED(statValue) {
+      try {
+        const response = await fetch('/api/postUpdateDBLED.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `Stat=${statValue}`,
+        });
+
+        const responseData = await response.json();
+
+        if (responseData.success) {
+          document.getElementById('toast').style.display = 'block';
+
+          setTimeout(() => {
+            document.getElementById('toast').style.display = 'none';
+          }, 2000);
+
+          const updateDataButton = document.querySelector('.buttonOFF:nth-child(3)');
+          const siramTanamanButton = document.querySelector('.buttonOFF:nth-child(4)');
+
+          if (statValue === 0) {
+            updateDataButton.disabled = true;
+            siramTanamanButton.disabled = true;
+            updateDataButton.classList.add('disabled-button');
+            siramTanamanButton.classList.add('disabled-button');
+          } else {
+            updateDataButton.disabled = statValue !== 1;
+            siramTanamanButton.disabled = statValue !== 1;
+            updateDataButton.classList.remove('disabled-button');
+            siramTanamanButton.classList.remove('disabled-button');
+          }
+        } else {
+          alert('Gagal memperbarui status. Error: ' + responseData.message);
+        }
+
+      } catch (error) {
+        console.error('Terjadi kesalahan:', error);
+        alert('Terjadi kesalahan saat mengirim permintaan.');
+      }
+    }
+
+
+  </script>
+  <script>
+    async function updateMode(statValue) {
+      try {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+
+        const response = await fetch('/api/postUpdateMode.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `Stat2=${statValue}`,
+        });
+
+        const responseData = await response.json();
+
+        if (responseData.success) {
+          document.getElementById('toast').style.display = 'block';
+
+          setTimeout(() => {
+            document.getElementById('toast').style.display = 'none';
+          }, 3000);
+        } else {
+          alert('Gagal memperbarui status. Error: ' + responseData.message);
+        }
+
+      } catch (error) {
+        console.error('Terjadi kesalahan:', error);
+        alert('Terjadi kesalahan saat mengirim permintaan.');
+      } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
+      }
+    }
+  </script>
+  <script>
+    const updateStatus = () => {
+  fetch('/api/getStat.php')
+    .then(response => response.text())
+    .then(status => {
+      const statusTextElement = document.getElementById('statusText');
+      const statusElement = document.getElementById('statusElement');
+
+      if (status.trim() === '0') {
+        statusTextElement.textContent = 'Mode Otomatis';
+        disableButtons(true);
+      } else if (status.trim() === '1') {
+        statusTextElement.textContent = 'Mode Manual';
+        disableButtons(false);
+      } else {
+        throw new Error('Data Tidak Sesuai');
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching or processing status data:', error);
+      const statusTextElement = document.getElementById('statusText');
+      const statusElement = document.getElementById('statusElement');
+      statusTextElement.textContent = 'Gagal';
+      disableButtons(false);
+    });
+};
+
+const disableButtons = (disable) => {
+  const updateDataButton = document.querySelector('.buttonOFF:nth-child(3)');
+  const siramTanamanButton = document.querySelector('.buttonOFF:nth-child(4)');
+
+  updateDataButton.disabled = disable;
+  siramTanamanButton.disabled = disable;
+
+  if (disable) {
+    updateDataButton.classList.add('disabled-button');
+    siramTanamanButton.classList.add('disabled-button');
+  } else {
+    updateDataButton.classList.remove('disabled-button');
+    siramTanamanButton.classList.remove('disabled-button');
+  }
+};
+
+setInterval(updateStatus, 1000);
+
+
+    setInterval(updateStatus, 1000);
+
+
+    setInterval(updateStatus, 1000);
+  </script>
+<script defer src="bundle.js"></script></body>
+
+</html>

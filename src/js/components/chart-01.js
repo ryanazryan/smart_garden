@@ -1,63 +1,74 @@
-import ApexCharts from 'apexcharts';
+import ApexCharts from 'apexcharts'
 
 const translateDay = (day) => {
   switch (day.toLowerCase()) {
     case 'sunday':
-      return 'Minggu';
+      return 'Minggu'
     case 'monday':
-      return 'Senin';
+      return 'Senin'
     case 'tuesday':
-      return 'Selasa';
+      return 'Selasa'
     case 'wednesday':
-      return 'Rabu';
+      return 'Rabu'
     case 'thursday':
-      return 'Kamis';
+      return 'Kamis'
     case 'friday':
-      return 'Jumat';
+      return 'Jumat'
     case 'saturday':
-      return 'Sabtu';
+      return 'Sabtu'
     default:
-      return day;
+      return day
   }
-};
+}
 
 const groupByWeek = (data) => {
-  const groupedData = {};
+  const sortedData = data.sort((a, b) => {
+    const dayOrder = { 'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6 }
+    return dayOrder[a.day.toLowerCase()] - dayOrder[b.day.toLowerCase()]
+  })
 
-  data.forEach((item) => {
-    const weekKey = item.week;
+  const groupedData = {}
+  let currentWeekStart
 
-    if (!groupedData[weekKey]) {
-      groupedData[weekKey] = [];
+  sortedData.forEach((item) => {
+    const itemDate = new Date(item.created_at)
+    const itemDay = itemDate.getDay()
+
+    if (!currentWeekStart || itemDay === 1) {
+      currentWeekStart = new Date(itemDate)
+      groupedData[currentWeekStart] = []
     }
 
-    groupedData[weekKey].push(item);
-  });
+    groupedData[currentWeekStart].push(item)
+  })
 
-  return groupedData;
-};
+  const latestWeekStart = Object.keys(groupedData).pop()
+  const latestWeekData = groupedData[latestWeekStart]
+
+  return { [latestWeekStart]: latestWeekData }
+}
+
 
 const chart01 = () => {
   fetch('/api/getAverageHumidity.php')
     .then((response) => response.json())
     .then((data) => {
-      const groupedData = groupByWeek(data.averageHumidity);
+      const groupedData = groupByWeek(data.averageHumidity)
 
-      // Mengambil data dari pekan terakhir
-      const latestWeekKey = Object.keys(groupedData).pop();
-      const latestWeekData = groupedData[latestWeekKey];
+      const latestWeekStart = Object.keys(groupedData).pop()
+      const latestWeekData = groupedData[latestWeekStart]
 
       const transformedData = latestWeekData.map((item) => ({
         x: translateDay(item.day),
         y: parseFloat(item.avg_humidity),
-        status: parseFloat(item.avg_humidity) < 10 ? 'Basah' : 'Kering',
-      }));
+        status: parseFloat(item.avg_humidity) === 0 ? 'Basah' : 'Kering',
+      }))
 
       const roundedData = transformedData.map((item) => ({
         x: item.x,
         y: Math.min(Math.round(item.y), 20),
-        status: item.status,
-      }));
+        status: item.status === 'Basah' ? 0 : 1,
+      }))
 
       const chartOneOptions = {
         series: [
@@ -66,11 +77,6 @@ const chart01 = () => {
             data: roundedData,
           },
         ],
-        legend: {
-          show: false,
-          position: 'top',
-          horizontalAlign: 'left',
-        },
         colors: ['#467816', '#80CAEE'],
         chart: {
           fontFamily: 'Satoshi, sans-serif',
@@ -171,38 +177,46 @@ const chart01 = () => {
             },
           },
           min: 0,
-          max: 20,
-          tickAmount: 4,
+          max: 1, 
+          tickAmount: 1,
           labels: {
-            formatter: (value) => `${value}`,
+            formatter: (value) => {
+              const status = value === 0 ? 'Basah' : 'Kering'
+              return `${status}`
+            },
           },
         },
-
+        chart: {
+          height: 400,
+        },
         tooltip: {
           enabled: true,
           shared: false,
           y: {
             formatter: (value) => {
-              const status = value < 10 ? 'Basah' : 'Kering';
-              return `${value} (${status})`;
+              const status = value === 0 ? 'Basah' : 'Kering'
+              return `${value} (${status})`
             },
           },
           style: {
-            fontFamily: 'Satoshi, sans-serif', 
+            fontFamily: 'Satoshi, sans-serif',
           },
         },
-      };
+      }
 
-      const chartOne = new ApexCharts(
-        document.querySelector('#chartOne'),
-        chartOneOptions
-      );
+      const chartSelector = document.querySelectorAll('#chartOne')
 
-      chartOne.render();
+      if (chartSelector.length) {
+        const chartOne = new ApexCharts(
+          document.querySelector('#chartOne'),
+          chartOneOptions
+        )
+        chartOne.render()
+      }
     })
     .catch((error) => {
-      console.error('Error fetching average humidity data:', error);
-    });
-};
+      console.error('Error fetching average humidity data:', error)
+    })
+}
 
-export default chart01;
+export default chart01

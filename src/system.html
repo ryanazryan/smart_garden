@@ -96,10 +96,10 @@
       <main>
         <div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 overflow-y-hidden" id="statusElement">
           <div class="card mb-10">
-            <a class="card1" href="#">
+            <a class="card1">
               <p id="statusText"></p>
               <p class="small">Status Alat</p>
-              <div class="go-corner" href="#">
+              <div class="go-corner">
                 <div class="go-arrow">
 
                 </div>
@@ -163,12 +163,12 @@
           const waterLevelValue = data.waterLevel;
           const waterLevelPercentageElement = document.getElementById('waterLevelBoolean');
 
-          const maximumValue = 31 * 2;
-          const percentage = ((maximumValue - waterLevelValue) / maximumValue) * 100;
+          const maximumValue = 31;
+          const basePercentage = 100;
+
+          const percentage = basePercentage * (1 - waterLevelValue / maximumValue);
 
           waterLevelPercentageElement.textContent = Math.round(percentage) + '%';
-
-          document.documentElement.style.setProperty('--water-level', percentage + '%');
 
           const waveElement = document.querySelector('.wave');
           const invertedPercentage = 100 - Math.round(percentage);
@@ -180,8 +180,6 @@
     fetchData();
     setInterval(fetchData, 1000);
   </script>
-
-
   <script>
     async function updateLED(statValue) {
       try {
@@ -216,6 +214,13 @@
             updateDataButton.classList.remove('disabled-button');
             siramTanamanButton.classList.remove('disabled-button');
           }
+
+          if (statValue === 1 && parseFloat(document.getElementById('waterLevelBoolean').innerText) < 25) {
+            alert('Tangki air kurang dari 25. Tidak dapat menyiram tanaman.');
+            siramTanamanButton.disabled = true;
+            siramTanamanButton.classList.add('disabled-button');
+          }
+
         } else {
           alert('Gagal memperbarui status. Error: ' + responseData.message);
         }
@@ -225,8 +230,6 @@
         alert('Terjadi kesalahan saat mengirim permintaan.');
       }
     }
-
-
   </script>
   <script>
     async function updateMode(statValue) {
@@ -263,48 +266,48 @@
   </script>
   <script>
     const updateStatus = () => {
-  fetch('/api/getStat.php')
-    .then(response => response.text())
-    .then(status => {
-      const statusTextElement = document.getElementById('statusText');
-      const statusElement = document.getElementById('statusElement');
+      fetch('/api/getStat.php')
+        .then(response => response.text())
+        .then(status => {
+          const statusTextElement = document.getElementById('statusText');
+          const statusElement = document.getElementById('statusElement');
 
-      if (status.trim() === '0') {
-        statusTextElement.textContent = 'Mode Otomatis';
-        disableButtons(true);
-      } else if (status.trim() === '1') {
-        statusTextElement.textContent = 'Mode Manual';
-        disableButtons(false);
+          if (status.trim() === '0') {
+            statusTextElement.textContent = 'Mode Otomatis';
+            disableButtons(true);
+          } else if (status.trim() === '1') {
+            statusTextElement.textContent = 'Mode Manual';
+            disableButtons(false);
+          } else {
+            throw new Error('Data Tidak Sesuai');
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching or processing status data:', error);
+          const statusTextElement = document.getElementById('statusText');
+          const statusElement = document.getElementById('statusElement');
+          statusTextElement.textContent = 'Gagal';
+          disableButtons(false);
+        });
+    };
+
+    const disableButtons = (disable) => {
+      const updateDataButton = document.querySelector('.buttonOFF:nth-child(3)');
+      const siramTanamanButton = document.querySelector('.buttonOFF:nth-child(4)');
+
+      updateDataButton.disabled = disable;
+      siramTanamanButton.disabled = disable;
+
+      if (disable) {
+        updateDataButton.classList.add('disabled-button');
+        siramTanamanButton.classList.add('disabled-button');
       } else {
-        throw new Error('Data Tidak Sesuai');
+        updateDataButton.classList.remove('disabled-button');
+        siramTanamanButton.classList.remove('disabled-button');
       }
-    })
-    .catch(error => {
-      console.error('Error fetching or processing status data:', error);
-      const statusTextElement = document.getElementById('statusText');
-      const statusElement = document.getElementById('statusElement');
-      statusTextElement.textContent = 'Gagal';
-      disableButtons(false);
-    });
-};
+    };
 
-const disableButtons = (disable) => {
-  const updateDataButton = document.querySelector('.buttonOFF:nth-child(3)');
-  const siramTanamanButton = document.querySelector('.buttonOFF:nth-child(4)');
-
-  updateDataButton.disabled = disable;
-  siramTanamanButton.disabled = disable;
-
-  if (disable) {
-    updateDataButton.classList.add('disabled-button');
-    siramTanamanButton.classList.add('disabled-button');
-  } else {
-    updateDataButton.classList.remove('disabled-button');
-    siramTanamanButton.classList.remove('disabled-button');
-  }
-};
-
-setInterval(updateStatus, 1000);
+    setInterval(updateStatus, 1000);
 
 
     setInterval(updateStatus, 1000);
