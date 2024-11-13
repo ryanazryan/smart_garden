@@ -4,7 +4,7 @@ const translateDay = (day) => {
   switch (day.toLowerCase()) {
     case 'sunday':
       return 'Minggu'
-    case 'monday':
+    case 'monday':  
       return 'Senin'
     case 'tuesday':
       return 'Selasa'
