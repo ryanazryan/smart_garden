@@ -15,7 +15,7 @@
   <img src="https://github.com/ryanazryan/smart_garden/blob/main/public/build/src/images/Smart%20Garden%20Light%20Mode%20UI.png?raw=true" alt="Dashboard Light Mobile UI" style="width: 40%; height: auto; max-height: 200px; object-fit: cover;">
   <img src="https://github.com/ryanazryan/smart_garden/blob/main/public/build/src/images/Smart%20Garden%20Water%20Supply%20Mobile%20UI.png?raw=true" alt="Dashboard Light Mobile UI Supply Water" style="width: 40%; height: auto; max-height: 200px; object-fit: cover;">
   <img src="https://github.com/ryanazryan/smart_garden/blob/main/public/build/src/images/Smart%20Garden%20Dark%20Mode%20UI.png?raw=true" alt="Dashboard Dark Mobile UI" style="width: 40%; height: auto; max-height: 200px; object-fit: cover;">
-  <img src="https://github.com/ryanazryan/smart_garden/blob/main/public/build/src/images/Smart%20Garden%20Water%20Supply%20UI%20Mobile.png?raw=true" alt="Dashboard Dark Mobile UI Supply Water" style="width: 40%; height: 500px; max-height: 200px; object-fit: cover;">
+  <img src="https://github.com/ryanazryan/smart_garden/blob/main/public/build/src/images/Smart%20Garden%20Water%20Supply%20UI%20Mobile.png?raw=true" alt="Dashboard Dark Mobile UI Supply Water" style="width: 40%; height: auto; max-height: 200px; object-fit: cover;">
 </div>
 
 
