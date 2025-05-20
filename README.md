@@ -26,8 +26,8 @@
 - **Real-time Data Monitoring**: Displays sensor data in real-time on the website.
   
 ## Technologies Used
-- **Backend**: Laravel (PHP Framework)
-- **Frontend**: HTML, CSS (Tailwind CSS), JavaScript
+- **Backend**: PHP
+- **Frontend**: Vue.js
 - **Database**: MySQL
 - **IoT Devices**:
   - **NodeMCU (ESP8266)**: Used to collect and transmit sensor data.
